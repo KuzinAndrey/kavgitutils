@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# Save "both modified:" git rebase files in temporary directory
+# You can use this files for restore original file with conflicts
+# if after edit something you lost right way
+
+TF=$(mktemp -p /dev/shm)
+LANGUAGE=en git status > $TF
+
+ID=$(awk 'FNR==1,/interactive rebase in progress; onto /{print $NF; exit}' $TF)
+
+if [ ! -z "$ID" ]; then
+	echo "GIT Rebase ID=$ID"
+	awk 'BEGIN{f=0}/^Unmerged paths:$/{f=1}/^\tboth modified:/{if (f==1) print $NF}/^$/{f=0}' $TF > $TF.files
+
+#	echo ======
+#	cat $TF
+#	echo ======
+#	cat $TF.files
+
+	if [ -s $TF.files ]; then
+		echo "Save dir: /dev/shm/$ID"
+		while read FN; do
+			D=$(dirname $FN)
+			F=$(basename $FN)
+			if [ -r $D/$F ]; then
+				if [ ! -d /dev/shm/$ID/$D ]; then
+				mkdir -p /dev/shm/$ID/$D || {
+					echo "Can't create /dev/shm/$ID/$D"
+					break
+				}
+				fi
+				if [ ! -r /dev/shm/$ID/$D/$F ]; then
+					cat $D/$F > /dev/shm/$ID/$D/$F \
+					&& printf "Copy file: $D/$F \n\t=> /dev/shm/$ID/$D/$F\n" \
+					|| echo "Failed copy - $D/$F"
+				else
+					echo "Skip $D/$F - already exists"
+				fi
+			fi
+		done < $TF.files
+	else
+		"No both modified files to save"
+	fi
+	rm $TF.files
+else
+	echo "Can't found rebase hash, may be you not in [git rebase] process"
+fi
+
+rm $TF

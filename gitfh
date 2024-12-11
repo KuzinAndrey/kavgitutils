@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Git file history as patch
+
+[ -z "$1" ] && echo "$0 <file> - git file history" && exit 1
+
+[ ! -r "$1" ] && echo "Can't read file $1" && exit 1
+
+TF=$(mktemp -p /dev/shm --suffix=.patch)
+echo "Save history to $TF, wait some time..."
+git log --follow -p -- $1 > $TF
+if [ $? -eq 0 ]; then
+	echo "Open file in editor..."
+	mcedit $TF
+else
+	echo "Can't save history for $1"
+fi
+
+rm $TF
