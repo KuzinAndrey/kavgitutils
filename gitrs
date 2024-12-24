@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Save "both modified:" git rebase files in temporary directory
+# Save "both modified:" or "both added:" git rebase files in temporary directory
 # You can use this files for restore original file with conflicts
 # if after edit something you lost right way
 
@@ -11,7 +11,7 @@ ID=$(awk 'FNR==1,/interactive rebase in progress; onto /{print $NF; exit}' $TF)
 
 if [ ! -z "$ID" ]; then
 	echo "GIT Rebase ID=$ID"
-	awk 'BEGIN{f=0}/^Unmerged paths:$/{f=1}/^\tboth modified:/{if (f==1) print $NF}/^$/{f=0}' $TF > $TF.files
+	awk 'BEGIN{f=0}/^Unmerged paths:$/{f=1}/^\tboth (modified|added):/{if (f==1) print $NF}/^$/{f=0}' $TF > $TF.files
 
 #	echo ======
 #	cat $TF
