@@ -41,6 +41,28 @@ REPO=$(basename "$URL" | sed 's/\.git$//g')
 	echo "ERROR: Can't parse REPO url ($URL)"
 	exit 1
 }
+DESC="Repository $URL"
+
+# Make github API call for description
+[[ "$URL" =~ ^(http|https|git):\/\/(|www\.)github\.com\/.* ]] && while true; do
+	GHREPO=`echo "$URL" | sed -e 's/.*:\/\/.*github\.com\///g' -e 's/\.git$//g'`
+	[ -z "$GHREPO" ] && break
+	echo -n "--- Make API call to github.com for repo [$GHREPO]: "
+	GHA=$(mktemp -p /dev/shm)
+	wget -q -O $GHA https://api.github.com/repos/$GHREPO
+	if [ $? -eq 0 -a -s $GHA ]; then
+		echo "OK"
+		GHDESCR=`grep "  \"description\":" $GHA | sed 's/^  \"description\": \"\(.*\)\",/\1/g'`
+		if [ ! -z "$GHDESCR" ]; then
+			echo "--- Github description: $GHDESCR"
+			DESC="$GHDESCR"
+		fi
+	else
+		echo "Fail"
+	fi
+	rm $GHA
+	break
+done
 
 TMPDIR=$(mktemp -d -p /dev/shm --suffix=$REPO)
 
@@ -65,7 +87,7 @@ tar -czf ../$REPO.git.tgz ./
 cd ..
 MD5=$(md5sum -b $REPO.git.tgz | cut -f1 -d' ')
 (cat > $REPO.git.info) << EOF
-DESC=Repository $URL
+DESC=$DESC
 REPO=$URL
 ORIGSIZE=$ORIGSIZE
 FILE=$REPO.git.tgz
