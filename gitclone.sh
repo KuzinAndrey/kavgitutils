@@ -70,19 +70,22 @@ exiterr() {
 	[ -d $TMPDIR ] && rm -rf $TMPDIR
 	echo "$@"
 	cd $CWD
+	exit 1
 }
 
 [ -z "$BRANCH" ] \
 	&& echo "--- Clone $URL" \
 	|| echo "--- Clone branch $(echo $BRANCH | cut -f2 -d' ') from $URL"
 
-git clone $BRANCH $URL $TMPDIR
-[ $? != 0 ] && exiterr "Can't run git clone"
+git clone $BRANCH $URL $TMPDIR \
+	&& echo "--- Cloned directory $TMPDIR" \
+	|| exiterr "Can't run git clone"
 
-cd $TMPDIR
+cd $TMPDIR || exiterr "Can't change directory to $TMPDIR"
 ORIGSIZE=$(du -bs | awk '{print $1}')
-tar -czf ../$REPO.git.tgz ./
-[ $? != 0 ] && exiterr "Can't run tar"
+tar -czf ../$REPO.git.tgz ./ \
+	&& echo "--- TGZ archive $REPO.git.tgz created" \
+	|| exiterr "Can't create archive $REPO.git.tgz"
 
 cd ..
 MD5=$(md5sum -b $REPO.git.tgz | cut -f1 -d' ')
