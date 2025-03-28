@@ -82,6 +82,14 @@ git clone $BRANCH $URL $TMPDIR \
 	|| exiterr "Can't run git clone"
 
 cd $TMPDIR || exiterr "Can't change directory to $TMPDIR"
+
+if [ -r .gitmodules ]; then
+	echo "--- Clone submodules"
+	git submodule update --init --recursive \
+		&& echo "--- Submodules cloned" \
+		|| exiterr "Can't clone submodules"
+fi
+
 ORIGSIZE=$(du -bs | awk '{print $1}')
 tar -czf ../$REPO.git.tgz ./ \
 	&& echo "--- TGZ archive $REPO.git.tgz created" \
