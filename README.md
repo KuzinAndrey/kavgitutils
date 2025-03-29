@@ -20,7 +20,10 @@ ORIGSIZE=232284015
 Programs list:
 - `gitclone.sh` - create tgz/info from remote repository by `git clone` command in `/dev/shm`.
 - `gitupdate.sh` - refresh content of tgz/info file with `git pull` and `git fetch --prune` for synchronize data.
+- `gitupdateall.sh` - recursively refresh content of all found `*.git.info` files by call `gitupdate.sh`.
+- `gitupdatedaemon.sh` - run daemon script for refresh all `*.git.info` in random order by one file every 15 min (to prevent huge load on remote origin).
 - `gitarch.sh` - make tgz/info from local directory with git repository
+- `gitrefresh.sh` - recursively dive into all git directories and pull new data.
 
 TODO: make web interface for that
 
