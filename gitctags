@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Generate TAGS etags file for C-code project to easy code navigation in
+# editors like emacs, mcedit, vi
+
+CWD=$(pwd)
+
+type ctags 1> /dev/null 2> /dev/null || {
+	echo "No ctags utility. Try 'sudo apt install universal-ctags' !!!"
+	exit 1
+}
+
+git status 1>/dev/null 2> /dev/null || {
+	echo "Fail git status in this directory"
+	exit 1
+}
+
+while [ ! -d .git ]; do cd ..; done
+
+find . -type f -name "*.[ch]" | ctags --c-kinds=+p --fields=+iaS --extras=+q -e -L-
+
+cd $CWD
