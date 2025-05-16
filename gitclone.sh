@@ -8,11 +8,14 @@
 
 URL=
 BRANCH=
+SUBMODULE=1
 CWD=$(pwd)
 PROG=$0
 
 usage() {
-	echo "Use: $PROG [-b branch] <url>"
+	echo "Use: $PROG [-n] [-b <branch>] <url>"
+	echo " -b - branch for cloning"
+	echo " -n - ignore submodules for cloning"
 	exit 1
 }
 
@@ -26,6 +29,7 @@ while [[ $# -gt 0 ]]; do
 			usage
 		}
 		;;
+	-n) SUBMODULE=0 ;;
 	*) URL=$opt ;;
 	esac
 	shift
@@ -83,7 +87,7 @@ git clone $BRANCH $URL $TMPDIR \
 
 cd $TMPDIR || exiterr "Can't change directory to $TMPDIR"
 
-if [ -r .gitmodules ]; then
+if [ -r .gitmodules -a "$SUBMODULE" = "1" ]; then
 	echo "--- Clone submodules"
 	git submodule update --init --recursive \
 		&& echo "--- Submodules cloned" \
