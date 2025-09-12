@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Kuzin Andrey 2024-08-13
 # Clone git repository into tar file
@@ -74,7 +74,7 @@ DESC="Repository $URL"
 	break
 done
 
-TMPDIR=$(mktemp -d -p $KAVGIT_TARGETDIR --suffix=$REPO)
+TMPDIR=$(mktemp -d -p $KAVGIT_TARGETDIR ${REPO}XXXXXX)
 
 exiterr() {
 	[ -d $TMPDIR ] && rm -rf $TMPDIR

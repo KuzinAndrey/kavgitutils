@@ -6,7 +6,13 @@
 
 [ ! -r "$1" ] && echo "Can't read file $1" && exit 1
 
-TF=$(mktemp -p /dev/shm --suffix=.patch)
+# target directory for work
+# KAVGIT_TARGETDIR=$(pwd) # can be in ~/.kavgitutils
+KAVGIT_TARGETDIR="/dev/shm"
+
+[ -d "$HOME" ] && [ -f "$HOME/.kavgitutils" ] && source "$HOME/.kavgitutils"
+
+TF="$(mktemp -u -p $KAVGIT_TARGETDIR).patch"
 echo "Save history to $TF, wait some time..."
 git log --follow -p -- $1 > $TF
 if [ $? -eq 0 ]; then

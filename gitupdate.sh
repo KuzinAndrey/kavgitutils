@@ -87,7 +87,7 @@ if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
 		exit 1
 	}
 
-	FNEW=$(mktemp -p $KAVGIT_TARGETDIR --suffix=.tgz)
+	FNEW="$(mktemp -u -p $KAVGIT_TARGETDIR).tgz"
 	ORIGSIZE=$(du -bs | awk '{print $1}')
 	echo "--- Size of dir: $ORIGSIZE"
 	echo "--- Make new git archive $FNEW"
