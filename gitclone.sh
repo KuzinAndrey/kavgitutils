@@ -23,7 +23,7 @@ usage() {
 	exit 1
 }
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
 	opt="$1"
 	case $opt in
 	-b)
@@ -54,7 +54,7 @@ REPO=$(basename "$URL" | sed 's/\.git$//g')
 DESC="Repository $URL"
 
 # Make github API call for description
-[[ "$URL" =~ ^(http|https|git):\/\/(|www\.)github\.com\/.* ]] && while true; do
+$(echo "$URL" | grep -qE "^(http|https|git):\/\/(|www\.)github\.com\/.*") && while true; do
 	GHREPO=`echo "$URL" | sed -e 's/.*:\/\/.*github\.com\///g' -e 's/\.git$//g'`
 	[ -z "$GHREPO" ] && break
 	echo -n "--- Make API call to github.com for repo [$GHREPO]: "
