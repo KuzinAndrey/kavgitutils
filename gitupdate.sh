@@ -10,6 +10,12 @@ CWD=$(pwd)
 CLEAN=1
 [ ! -z "$2" -a "$2" = "-nc" ] && CLEAN=0
 
+# target directory for work
+# KAVGIT_TARGETDIR=$(pwd) # can be in ~/.kavgitutils
+KAVGIT_TARGETDIR="/dev/shm"
+
+[ -d "$HOME" ] && [ -f "$HOME/.kavgitutils" ] && source "$HOME/.kavgitutils"
+
 IF=$(realpath $1)
 echo $IF | grep -qE "\.git\.info$" || {
 	echo "This is not *.git.info file"
@@ -47,7 +53,7 @@ CHECK=$(md5sum $SDIR/$FILE | cut -f1 -d' ')
 
 [ "$CHECK" != "$MD5" ] && echo "Fail MD5 sum for file $SDIR/$FILE: $CHECK (need to be $MD5)" && exit 1
 
-TD=$(mktemp -p /dev/shm -d)
+TD=$(mktemp -p $KAVGIT_TARGETDIR -d)
 echo "--- Extract $FILE into $TD"
 tar -xzf $SDIR/$FILE -C $TD || {
 	echo "Can't extract $FILE"
@@ -81,7 +87,7 @@ if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
 		exit 1
 	}
 
-	FNEW=$(mktemp -p /dev/shm --suffix=.tgz)
+	FNEW=$(mktemp -p $KAVGIT_TARGETDIR --suffix=.tgz)
 	ORIGSIZE=$(du -bs | awk '{print $1}')
 	echo "--- Size of dir: $ORIGSIZE"
 	echo "--- Make new git archive $FNEW"
@@ -134,11 +140,11 @@ if [ $CLEAN -eq 1 ]; then
 	rm -rf $TD
 else
 	NAME=$(basename $IF | sed 's/.git.info$//g')
-	if [ ! -d /dev/shm/$NAME ]; then
-		echo "--- !!! REPO directory available at /dev/shm/$NAME"
-		mv $TD /dev/shm/$NAME
+	if [ ! -d $KAVGIT_TARGETDIR/$NAME ]; then
+		echo "--- !!! REPO directory available at $KAVGIT_TARGETDIR/$NAME"
+		mv $TD $KAVGIT_TARGETDIR/$NAME
 	else
-		echo "--- Can't rename to /dev/shm/$NAME (directory already exists)"
+		echo "--- Can't rename to $KAVGIT_TARGETDIR/$NAME (directory already exists)"
 		echo "--- !!! REPO directory available at $TD"
 	fi
 fi

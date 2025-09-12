@@ -12,6 +12,10 @@ SUBMODULE=1
 CWD=$(pwd)
 PROG=$0
 
+# target directory for work
+# KAVGIT_TARGETDIR=$(pwd) # can be in ~/.kavgitutils
+KAVGIT_TARGETDIR="/dev/shm"
+
 usage() {
 	echo "Use: $PROG [-n] [-b <branch>] <url>"
 	echo " -b - branch for cloning"
@@ -35,6 +39,8 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
+[ -d "$HOME" ] && [ -f "$HOME/.kavgitutils" ] && source "$HOME/.kavgitutils"
+
 [ -z "$URL" ] && {
 	echo "ERROR: No any URL was provided"
 	usage
@@ -52,7 +58,7 @@ DESC="Repository $URL"
 	GHREPO=`echo "$URL" | sed -e 's/.*:\/\/.*github\.com\///g' -e 's/\.git$//g'`
 	[ -z "$GHREPO" ] && break
 	echo -n "--- Make API call to github.com for repo [$GHREPO]: "
-	GHA=$(mktemp -p /dev/shm)
+	GHA=$(mktemp -p $KAVGIT_TARGETDIR)
 	wget -q -O $GHA https://api.github.com/repos/$GHREPO
 	if [ $? -eq 0 -a -s $GHA ]; then
 		echo "OK"
@@ -68,7 +74,7 @@ DESC="Repository $URL"
 	break
 done
 
-TMPDIR=$(mktemp -d -p /dev/shm --suffix=$REPO)
+TMPDIR=$(mktemp -d -p $KAVGIT_TARGETDIR --suffix=$REPO)
 
 exiterr() {
 	[ -d $TMPDIR ] && rm -rf $TMPDIR
