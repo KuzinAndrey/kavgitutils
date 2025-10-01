@@ -62,12 +62,15 @@ tar -xzf $SDIR/$FILE -C $TD || {
 }
 
 cd $TD
+ORIGSIZE=$(du -bs | awk '{print $1}')
+echo "--- Size of dir original: $ORIGSIZE"
+
 GIT_OLD_HASH=$(git rev-parse HEAD)
 echo "--- Git HEAD hash: $GIT_OLD_HASH"
 
-echo "--- Fetch git repo: $REPO"
-git pull || {
-	echo "Can't git fetch the repo: $REPO"
+echo "--- Pull git repo: $REPO"
+git pull --all --tags --prune --rebase || {
+	echo "Can't git pull the repo (ret $?): $REPO"
 	cd $CWD && rm -rf $TD
 	exit 1
 }
@@ -81,16 +84,6 @@ GIT_NEW_HASH=$(git rev-parse HEAD)
 echo "--- New get HEAD hash: $GIT_NEW_HASH"
 
 if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
-	ORIGSIZE=$(du -bs | awk '{print $1}')
-	echo "--- Size of dir original: $ORIGSIZE"
-
-	echo "--- git fetch --prune"
-	git fetch --prune || {
-		echo "Can't git fetch the repo: $REPO"
-		cd $CWD && rm -rf $TD
-		exit 1
-	}
-
 	echo "--- git gc --aggressive"
 	git gc --aggressive || {
 		echo "Can't git gc in repo: $REPO"
@@ -100,7 +93,9 @@ if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
 
 	GCSIZE=$(du -bs | awk '{print $1}')
 	DELTA=$(echo $ORIGSIZE - $GCSIZE | bc)
-	echo "--- Size of dir after GC: $GCSIZE (delta: $DELTA)"
+	echo "--- Size of dir original: $ORIGSIZE"
+	echo "--- Size of dir after GC: $GCSIZE"
+	echo "--- Size delta: $DELTA"
 
 	FNEW="$(mktemp -u -p $KAVGIT_TARGETDIR).tgz"
 	echo "--- Make new git archive $FNEW"
