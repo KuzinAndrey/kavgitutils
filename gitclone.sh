@@ -100,6 +100,9 @@ if [ -r .gitmodules -a "$SUBMODULE" = "1" ]; then
 		|| exiterr "Can't clone submodules"
 fi
 
+echo "--- git gc --aggressive"
+git gc --aggressive || exiterr "Can't git GC"
+
 ORIGSIZE=$(du -bs | awk '{print $1}')
 tar -czf ../$REPO.git.tgz ./ \
 	&& echo "--- TGZ archive $REPO.git.tgz created" \
