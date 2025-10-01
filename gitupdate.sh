@@ -81,8 +81,16 @@ GIT_NEW_HASH=$(git rev-parse HEAD)
 echo "--- New get HEAD hash: $GIT_NEW_HASH"
 
 if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
+	echo "--- git fetch --prune"
 	git fetch --prune || {
 		echo "Can't git fetch the repo: $REPO"
+		cd $CWD && rm -rf $TD
+		exit 1
+	}
+
+	echo "--- git gc --aggressive"
+	git gc --aggressive || {
+		echo "Can't git gc in repo: $REPO"
 		cd $CWD && rm -rf $TD
 		exit 1
 	}
