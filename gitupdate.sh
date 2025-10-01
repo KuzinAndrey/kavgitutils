@@ -81,6 +81,9 @@ GIT_NEW_HASH=$(git rev-parse HEAD)
 echo "--- New get HEAD hash: $GIT_NEW_HASH"
 
 if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
+	ORIGSIZE=$(du -bs | awk '{print $1}')
+	echo "--- Size of dir original: $ORIGSIZE"
+
 	echo "--- git fetch --prune"
 	git fetch --prune || {
 		echo "Can't git fetch the repo: $REPO"
@@ -95,9 +98,11 @@ if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
 		exit 1
 	}
 
+	GCSIZE=$(du -bs | awk '{print $1}')
+	DELTA=$(echo $ORIGSIZE - $GCSIZE | bc)
+	echo "--- Size of dir after GC: $GCSIZE (delta: $DELTA)"
+
 	FNEW="$(mktemp -u -p $KAVGIT_TARGETDIR).tgz"
-	ORIGSIZE=$(du -bs | awk '{print $1}')
-	echo "--- Size of dir: $ORIGSIZE"
 	echo "--- Make new git archive $FNEW"
 	tar -czf $FNEW ./ || {
 		echo "Can't create $FNEW git arch"
