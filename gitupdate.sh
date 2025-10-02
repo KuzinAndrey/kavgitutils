@@ -4,11 +4,25 @@
 
 set -e
 
+usage() {
+	echo "Use: $1 <file.git.info> [-nc] [-gc]"
+	echo "-nc - don't clean result directory after update"
+	echo "-gc - force garbage collection if no any changes"
+}
+
 CWD=$(pwd)
-[ -z "$1" ] && echo "Use: $0 <file.git.info> [-nc]" && exit 1
-[ ! -r "$1" ] && echo "Can't read $1 file" && exit 1
+[ -z "$1" ] && usage $0 && exit 1
+INFOFILE=$1 && shift
+[ ! -r "$INFOFILE" ] && echo "Can't read $INFOFILE file" && exit 1
 CLEAN=1
-[ ! -z "$2" -a "$2" = "-nc" ] && CLEAN=0
+FORCEGC=0
+while [ -n "$1" ]; do
+	case "$1" in
+	"-nc") CLEAN=0 ;;
+	"-gc") FORCEGC=1 ;;
+	esac
+	shift
+done
 
 # target directory for work
 # KAVGIT_TARGETDIR=$(pwd) # can be in ~/.kavgitutils
@@ -16,7 +30,7 @@ KAVGIT_TARGETDIR="/dev/shm"
 
 [ -d "$HOME" ] && [ -f "$HOME/.kavgitutils" ] && source "$HOME/.kavgitutils"
 
-IF=$(realpath $1)
+IF=$(realpath $INFOFILE)
 echo $IF | grep -qE "\.git\.info$" || {
 	echo "This is not *.git.info file"
 	exit 1
@@ -83,7 +97,8 @@ done
 GIT_NEW_HASH=$(git rev-parse HEAD)
 echo "--- New get HEAD hash: $GIT_NEW_HASH"
 
-if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
+UPDATED=0
+while [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" -o "$FORCEGC" = "1" ]; do
 	echo "--- git gc --aggressive"
 	git gc --aggressive || {
 		echo "Can't git gc in repo: $REPO"
@@ -96,6 +111,11 @@ if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
 	echo "--- Size of dir original: $ORIGSIZE"
 	echo "--- Size of dir after GC: $GCSIZE"
 	echo "--- Size delta: $DELTA"
+
+	if [ "$GIT_OLD_HASH" = "$GIT_NEW_HASH" -a "$DELTA" = "0" ]; then
+		echo "--- GC has not any result"
+		break
+	fi
 
 	FNEW="$(mktemp -u -p $KAVGIT_TARGETDIR).tgz"
 	echo "--- Make new git archive $FNEW"
@@ -136,7 +156,11 @@ if [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" ]; then
 		-e "s#^MD5=.*\$#MD5=$MD5NEW#g" \
 		-e "s#^ORIGSIZE=.*\$#ORIGSIZE=$ORIGSIZE#g" \
 		$IF
-else
+	UPDATED=1
+	break
+done
+
+if [ "$UPDATED" = "0" ]; then
 	echo "--- Nothing to do (touch $IF)"
 	touch $IF
 fi
