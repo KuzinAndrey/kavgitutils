@@ -12,6 +12,7 @@ SLEEP=${1:-900}
 TS=$(date +%s)
 CWD=$(pwd)
 SLEEP=${1:-900}
+export LC_NUMERIC=C
 while [ 1 ]; do
 	cd $CWD && find . -type f -name "*.git.info" -mtime +1 -print | shuf > /dev/shm/.gitqueue-$TS;
 	[ -r /dev/shm/.gitqueue-$TS ] && [ -s /dev/shm/.gitqueue-$TS ] && \
@@ -23,9 +24,15 @@ while [ 1 ]; do
 		[ -z "$F" ] && break
 		printf "%s" "$(date +"%F %T") - $F " >> /dev/shm/.gitqueue-$TS.log
 		ST=$(date +"%s.%N")
+		OLD_SIZE=$(egrep "^ORIGSIZE=" $F | cut -f2 -d=)
 		gitupdate.sh $F -gc
 		ET=$(date +"%s.%N")
-		LC_NUMERIC=C printf "(done in %.03f sec)\n" $(echo "$ET - $ST" | bc) >> /dev/shm/.gitqueue-$TS.log
+		NEW_SIZE=$(egrep "^ORIGSIZE=" $F | cut -f2 -d=)
+		printf "(done in %.03f sec," $(echo "$ET - $ST" | bc) >> /dev/shm/.gitqueue-$TS.log
+		printf " size old=%d" $OLD_SIZE >> /dev/shm/.gitqueue-$TS.log
+		printf " new=%d" $NEW_SIZE >> /dev/shm/.gitqueue-$TS.log
+		printf " delta=%d)" $(echo "$NEW_SIZE - $OLD_SIZE" | bc) >> /dev/shm/.gitqueue-$TS.log
+		echo >> /dev/shm/.gitqueue-$TS.log
 		sleep $SLEEP
 	done
 	sleep $SLEEP

@@ -116,6 +116,7 @@ while [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" -o "$FORCEGC" = "1" ]; do
 		echo "--- GC has not any result"
 		break
 	fi
+	ORIGSIZE=$GCSIZE
 
 	FNEW="$(mktemp -u -p $KAVGIT_TARGETDIR).tgz"
 	echo "--- Make new git archive $FNEW"
