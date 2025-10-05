@@ -1,13 +1,17 @@
 #!/bin/sh
 
 # Update all git repository git.tgz/git.info files in current directory
-# randomly in forever cycle one file in 15 minutes
+# randomly in forever cycle one file in 15 minutes (default)
+# You can set delay by first argv (example for 1 min):
+#    ./gitupdatedaemon.sh 60
 
 TS=$(date +%s)
+SLEEP=${1:-900}
 (cat > /dev/shm/gitdaemon-$TS.sh) << \EOF
 #!/bin/sh
 TS=$(date +%s)
 CWD=$(pwd)
+SLEEP=${1:-900}
 while [ 1 ]; do
 	cd $CWD && find . -type f -name "*.git.info" -mtime +1 -print | shuf > /dev/shm/.gitqueue-$TS;
 	[ -r /dev/shm/.gitqueue-$TS ] && [ -s /dev/shm/.gitqueue-$TS ] && \
@@ -22,11 +26,11 @@ while [ 1 ]; do
 		gitupdate.sh $F -gc
 		ET=$(date +"%s.%N")
 		LC_NUMERIC=C printf "(done in %.03f sec)\n" $(echo "$ET - $ST" | bc) >> /dev/shm/.gitqueue-$TS.log
-		sleep 900
+		sleep $SLEEP
 	done
-	sleep 900
+	sleep $SLEEP
 done
 EOF
 chmod a+x /dev/shm/gitdaemon-$TS.sh
-nohup /dev/shm/gitdaemon-$TS.sh 1> /dev/null 2> /dev/null &
+nohup /dev/shm/gitdaemon-$TS.sh $SLEEP 1> /dev/null 2> /dev/null &
 sleep 1 && rm /dev/shm/gitdaemon-$TS.sh
