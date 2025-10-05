@@ -83,7 +83,7 @@ GIT_OLD_HASH=$(git rev-parse HEAD)
 echo "--- Git HEAD hash: $GIT_OLD_HASH"
 
 echo "--- Pull git repo: $REPO"
-git pull --all --tags --prune --rebase || {
+git pull --all --tags --prune --rebase --force || {
 	echo "Can't git pull the repo (ret $?): $REPO"
 	cd $CWD && rm -rf $TD
 	exit 1
