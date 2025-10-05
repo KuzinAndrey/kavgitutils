@@ -19,7 +19,7 @@ while [ 1 ]; do
 		[ -z "$F" ] && break
 		printf "%s" "$(date +"%F %T") - $F " >> /dev/shm/.gitqueue-$TS.log
 		ST=$(date +"%s.%N")
-		gitupdate.sh $F
+		gitupdate.sh $F -gc
 		ET=$(date +"%s.%N")
 		LC_NUMERIC=C printf "(done in %.03f sec)\n" $(echo "$ET - $ST" | bc) >> /dev/shm/.gitqueue-$TS.log
 		sleep 900
