@@ -11,6 +11,8 @@ BRANCH=
 SUBMODULE=1
 CWD=$(pwd)
 PROG=$0
+GHA=
+UPDATE=
 
 # target directory for work
 # KAVGIT_TARGETDIR=$(pwd) # can be in ~/.kavgitutils
@@ -67,10 +69,11 @@ $(echo "$URL" | grep -qE "^(http|https|git):\/\/(|www\.)github\.com\/.*") && whi
 			echo "--- Github description: $GHDESCR"
 			DESC="$GHDESCR"
 		fi
+		grep -q "\"archived\": true," $GHA && UPDATE=no
 	else
 		echo "Fail"
+		rm $GHA && GHA=
 	fi
-	rm $GHA
 	break
 done
 
@@ -117,6 +120,11 @@ ORIGSIZE=$ORIGSIZE
 FILE=$REPO.git.tgz
 MD5=$MD5
 EOF
+[ -n "$UPDATE" ] && echo "UPDATE=$UPDATE" >> $REPO.git.info
+[ -n "$GHA" ] && {
+	echo "--- Save Github API result in $REPO.git.githubapi.json"
+	mv $GHA $REPO.git.githubapi.json
+}
 
 cd $CWD
 [ -d $TMPDIR ] && rm -rf $TMPDIR
