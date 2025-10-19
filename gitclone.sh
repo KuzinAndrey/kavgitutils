@@ -48,6 +48,7 @@ done
 	usage
 }
 
+URL=$(echo "$URL" | sed 's/[/]*$//g')
 REPO=$(basename "$URL" | sed 's/\.git$//g')
 [ -z "$REPO" ] && {
 	echo "ERROR: Can't parse REPO url ($URL)"
