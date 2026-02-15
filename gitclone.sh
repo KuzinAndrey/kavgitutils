@@ -5,6 +5,7 @@
 #
 # History:
 # 2024-11-06 add branch clone support
+# 2025-02-15 use jq form json parsing
 
 URL=
 BRANCH=
@@ -13,6 +14,14 @@ CWD=$(pwd)
 PROG=$0
 GHA=
 UPDATE=
+
+# Check commands for existance
+for CMD in git jq wget tar ; do
+	type $CMD || {
+		echo "ERROR: $CMD command not found!" 1>&2
+		exit 1
+	}
+done
 
 # target directory for work
 # KAVGIT_TARGETDIR=$(pwd) # can be in ~/.kavgitutils
@@ -65,8 +74,8 @@ $(echo "$URL" | grep -qE "^(http|https|git):\/\/(|www\.)github\.com\/.*") && whi
 	wget -q -O $GHA https://api.github.com/repos/$GHREPO
 	if [ $? -eq 0 -a -s $GHA ]; then
 		echo "OK"
-		GHDESCR=`grep "  \"description\":" $GHA | sed 's/^  \"description\": \"\(.*\)\",/\1/g'`
-		if [ ! -z "$GHDESCR" ]; then
+		GHDESCR=$(jq -r ".description" $GHA)
+		if [ ! -z "$GHDESCR" -a "$GHDESCR" != "null" ]; then
 			echo "--- Github description: $GHDESCR"
 			DESC="$GHDESCR"
 		fi
