@@ -99,24 +99,27 @@ echo "--- New get HEAD hash: $GIT_NEW_HASH"
 
 UPDATED=0
 while [ "$GIT_OLD_HASH" != "$GIT_NEW_HASH" -o "$FORCEGC" = "1" ]; do
-	echo "--- git gc --aggressive"
-	git gc --aggressive || {
-		echo "Can't git gc in repo: $REPO"
-		cd $CWD && rm -rf $TD
-		exit 1
-	}
 
-	GCSIZE=$(du -bs | awk '{print $1}')
-	DELTA=$(echo $ORIGSIZE - $GCSIZE | bc)
-	echo "--- Size of dir original: $ORIGSIZE"
-	echo "--- Size of dir after GC: $GCSIZE"
-	echo "--- Size delta: $DELTA"
+	if [ "$FORCEGC" = "1" ]; then
+		echo "--- git gc --aggressive"
+		git gc --aggressive || {
+			echo "Can't git gc in repo: $REPO"
+			cd $CWD && rm -rf $TD
+			exit 1
+		}
 
-	if [ "$GIT_OLD_HASH" = "$GIT_NEW_HASH" -a "$DELTA" = "0" ]; then
-		echo "--- GC has not any result"
-		break
+		GCSIZE=$(du -bs | awk '{print $1}')
+		DELTA=$(echo $ORIGSIZE - $GCSIZE | bc)
+		echo "--- Size of dir original: $ORIGSIZE"
+		echo "--- Size of dir after GC: $GCSIZE"
+		echo "--- Size delta: $DELTA"
+
+		if [ "$GIT_OLD_HASH" = "$GIT_NEW_HASH" -a "$DELTA" = "0" ]; then
+			echo "--- GC has not any result"
+			break
+		fi
+		ORIGSIZE=$GCSIZE
 	fi
-	ORIGSIZE=$GCSIZE
 
 	FNEW="$(mktemp -u -p $KAVGIT_TARGETDIR).tgz"
 	echo "--- Make new git archive $FNEW"
